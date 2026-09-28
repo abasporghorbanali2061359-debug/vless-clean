@@ -27,9 +27,11 @@ def unsafe(uri):
     try:
         q = urllib.parse.parse_qs(urllib.parse.urlsplit(uri).query, keep_blank_values=True)
         q = {k.lower(): [v.lower() for v in vals] for k, vals in q.items()}
-        return (any(v in BAD_TRUE for v in q.get("allowinsecure", []))
-                or any(v in BAD_TRUE for v in q.get("insecure", []))
-                or any(v == "unsafe" for v in q.get("fp", [])))
+        return (
+            any(v in BAD_TRUE for v in q.get("allowinsecure", []))
+            or any(v in BAD_TRUE for v in q.get("insecure", []))
+            or any(v == "unsafe" for v in q.get("fp", []))
+        )
     except Exception:
         return True
 
@@ -63,8 +65,6 @@ def stable(uri):
 raw = urllib.request.urlopen(SOURCE, timeout=30).read().decode("utf-8", "replace")
 lines = [x.strip() for x in decode_subscription(raw).splitlines() if x.strip()]
 safe = [x for x in lines if x.startswith("vless://") and not unsafe(x)]
-
-# Remove exact duplicate configurations while preserving source order.
 safe = list(dict.fromkeys(safe))
 
 results = []
@@ -79,15 +79,16 @@ with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
         except Exception:
             pass
 
-# Put consistently reachable, lower TCP-connect-latency endpoints first.
 results.sort(key=lambda x: x[0])
 clean = [uri for _, uri in results[:MAX_OUTPUT]]
 
-payload = base64.b64encode(("
-".join(clean) + ("
-" if clean else "")).encode()).decode()
-with open("sub.txt", "w", encoding="utf-8") as f:
-    f.write(payload + "
-")
+newline = chr(10)
+plain = newline.join(clean)
+if clean:
+    plain += newline
+payload = base64.b64encode(plain.encode("utf-8")).decode("ascii")
+with open("sub.txt", "w", encoding="utf-8") as out:
+    out.write(payload)
+    out.write(newline)
 
 print(f"source={len(lines)} safe_unique={len(safe)} top_stable={len(clean)} removed={len(lines)-len(clean)}")
