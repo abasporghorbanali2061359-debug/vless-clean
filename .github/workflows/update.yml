@@ -11,17 +11,18 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: Filter subscription
+      - name: Filter unsafe and unreachable endpoints
         run: python filter.py
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add sub.txt
-          git diff --cached --quiet || git commit -m "Update clean subscription"
+          git diff --cached --quiet || git commit -m "Update clean reachable subscription"
           git push
