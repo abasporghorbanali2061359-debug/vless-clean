@@ -11,7 +11,8 @@ CONNECT_TIMEOUT = 2.5
 MAX_WORKERS = 60
 TESTS = 3
 MIN_SUCCESSES = 3
-PAUSE = 0.25\nMAX_OUTPUT = 30
+PAUSE = 0.25
+MAX_OUTPUT = 30
 
 def decode_subscription(raw):
     raw = raw.strip()
@@ -82,8 +83,11 @@ with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
 results.sort(key=lambda x: x[0])
 clean = [uri for _, uri in results[:MAX_OUTPUT]]
 
-payload = base64.b64encode(("\n".join(clean) + ("\n" if clean else "")).encode()).decode()
+payload = base64.b64encode(("
+".join(clean) + ("
+" if clean else "")).encode()).decode()
 with open("sub.txt", "w", encoding="utf-8") as f:
-    f.write(payload + "\n")
+    f.write(payload + "
+")
 
 print(f"source={len(lines)} safe_unique={len(safe)} top_stable={len(clean)} removed={len(lines)-len(clean)}")
