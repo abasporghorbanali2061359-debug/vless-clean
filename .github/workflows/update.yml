@@ -1,29 +1,52 @@
 name: Update clean VLESS subscription
+
 on:
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
+
 permissions:
   contents: write
+
 concurrency:
   group: vless-clean-update
   cancel-in-progress: true
+
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: Filter unsafe and unreachable endpoints
+
+      - name: Install Xray
+        run: |
+          curl -L -o /tmp/xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+          sudo mkdir -p /usr/local/share/xray
+          sudo unzip -o /tmp/xray.zip -d /usr/local/share/xray
+          sudo install -m 755 /usr/local/share/xray/xray /usr/local/bin/xray
+          xray version
+
+      - name: Test real VLESS connections
         run: python filter.py
-      - name: Commit changes
+
+      - name: Show result
+        run: |
+          echo "Generated subscription:"
+          ls -lh sub.txt
+
+      - name: Commit verified subscription
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add sub.txt
-          git diff --cached --quiet || git commit -m "Update clean reachable subscription"
+          git diff --cached --quiet || git commit -m "Update verified working VLESS subscription"
           git pull --rebase origin main
           git push origin main
