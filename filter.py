@@ -8,7 +8,7 @@ import urllib.parse
 import urllib.request
 from collections import defaultdict
 
-SOURCE = "https://raw.githubusercontent.com/mehrtat/vless-collector/main/sub.txt"
+SOURCE = SOURCE = "https://sub.vlessfo.ru/vlessforu/working_configs.txt"
 
 BAD_TRUE = {"1", "true", "yes", "on"}
 
